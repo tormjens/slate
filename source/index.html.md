@@ -1,189 +1,205 @@
 ---
-title: API Reference
+title: Documentation
 
 language_tabs:
-  - shell
-  - ruby
-  - python
-  - javascript
-
-toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
-  - <a href='https://github.com/tripit/slate'>Documentation Powered by Slate</a>
-
-includes:
-  - errors
+  - php
 
 search: true
 ---
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Welcome to the WP Blade documentation. WP Blade is a simple wrapper around Laravel's excellent Blade.
 
-We have language bindings in Shell, Ruby, and Python! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+Blade is ment for theme developers rather than plugin developers, as it ties in with the template engine of WordPress.
 
-This example API documentation page was created with [Slate](https://github.com/tripit/slate). Feel free to edit it and use it as a base for your own API's documentation.
+# Installing
 
-# Authentication
+> Simply add this somewhere in your theme functions, or as a `mu-plugin`
 
-> To authorize, use this code:
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
+```php
+<?php
+$blade = TorMorten\View\Blade::create();
 ```
 
-```python
-import kittn
+> Make sure your theme is ready for WP Blade by adding theme support for `blade-templates`
 
-api = kittn.authorize('meowmeowmeow')
+```php
+<?php 
+add_action('after_theme_setup', function() {
+  add_theme_support('blade-templates');
+});
 ```
 
-```shell
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
-```
+WP Blade is, for now, only availiable as a composer package. If you have not used composer before, you should really check it out.
 
-```javascript
-const kittn = require('kittn');
+Install it by adding `"tormjens/wp-blade" : "dev-5.4-dev"` to your `composer.json`.
 
-let api = kittn.authorize('meowmeowmeow');
-```
+# Controllers
 
-> Make sure to replace `meowmeowmeow` with your API key.
+> First create your controller and include it somewhere before you load it. This will attach the controller to every single view you specify in the `$views` array.
 
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
+```php 
+<?php 
 
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
+class BooksController extends TorMorten\View\Controller {
 
-`Authorization: meowmeowmeow`
+  protected $views = ['books', 'library'];
 
-<aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
-</aside>
-
-# Kittens
-
-## Get All Kittens
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
-
-```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
-
-> The above command returns JSON structured like this:
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
+  public function process() {
+    $books = get_posts('post_type=books');
+    return compact('books');
   }
-]
-```
 
-This endpoint retrieves all kittens.
-
-### HTTP Request
-
-`GET http://example.com/api/kittens`
-
-### Query Parameters
-
-Parameter | Default | Description
---------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
-
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
-</aside>
-
-## Get a Specific Kitten
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
-{
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
 }
 ```
 
-This endpoint retrieves a specific kitten.
+> Once you have included your controller somewhere you may initialize it, either via the `$blade` variable from the previous example.
 
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
+```php
+<?php
+$blade->addController('BooksController');
+```
 
-### HTTP Request
+> Or via the `instance` method on the class.
 
-`GET http://example.com/kittens/<ID>`
+```php 
+<?php
+TorMorten\View\Blade::instance()->addController('BooksController');
+```
 
-### URL Parameters
+One of the main features of WP Blade is the ability to move the logic for your view out to controllers. Controllers are tied to one or multiple views, and only return data.
 
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to retrieve
+> That's it. You can now access the data your returned in your `process()` method as variables in your Blade template.
 
+```php
+@if($books)
+  @foreach($books as $book)
+    <p>I like the book {{$book->post_title}}</p>
+  @endforeach
+@endif
+```
+
+# Directives
+
+WP Blade comes with a set of custom directives to ease your development workflow and make your templates look cleaner.
+
+> Define a variable
+
+```php
+@var('foo', 'bar')
+{{$foo}}
+```
+
+> The loop
+
+```php 
+@wpposts
+  <h1>{{get_the_title()}}</h1>
+@wpempty
+  No posts here.
+@wpend
+```
+
+> WP Query
+
+```php
+@wpquery('post_type=books')
+  <p>I like the book {{get_the_title()}}</p>
+@wpempty
+  No posts here.
+@wpend
+```
+
+> Advanced Custom Fields
+
+```php
+# Repeater / flexible content
+@acf('authors')
+  <p>The author name is {{get_sub_field('name')}}</p>
+@acfempty
+  No authors added
+@acfend
+
+# Check if a field value exists
+@acfhas('authors')
+  Yes, I have authors.
+@acfend
+
+# Output a field (if it exists)
+@acffield('sub_title')
+
+# Output a sub field (if it exists)
+@acfsub('name')
+```
+
+# Changing the defaults
+
+WP Blade operates with a couple of default paths. You can easily change these.
+
+The defaults are:
+
+Variables | Default | Description |
+--------- | ------- | ----------- |
+`BLADE_VIEWS` | {template_directory}/views/ | The directory that will be searched for partials when you use the `@include('view')` directive.
+`BLADE_CACHE` | {template_directory}/views/ | The directory that contains all compiled Blade templates.
+
+> The defaults can be set before you intialize Blade. Or even in `wp-config.php`
+
+```php
+<?php
+define('BLADE_VIEWS', '/path/to/my/views');
+define('BLADE_CACHE', '/path/to/my/cache');
+```
+
+> You can also change these using a series of filters.
+
+```php 
+<?php
+add_filter('wp_blade_views_directory', function($path) {
+  return '/path/to/my/views';
+});
+
+add_filter('wp_blade_cache_directory', function($path) {
+  return '/path/to/my/cache';
+});
+```
+
+# Filters and actions
+
+A series of filters and actions are also availiable if you need to hook in to any point in the code.
+
+## Actions
+
+Action | Description |
+--------- | ----------- |
+`wp_blade_booting` | Runs at the very start of the initialization process.
+`wp_blade_booted` | Runs when the initialization is completed.
+`wp_blade_add_directive` | Allows adding more custom directives.
+
+# Extending
+
+WP Blade can easily be extended with directives that you might need.
+
+> Somewhere in your code, call the `wp_blade_add_directive` with your new directive.
+
+```php 
+<?php 
+add_action('wp_blade_add_directive', function($compiler) {
+  $compiler->directive('foo', function() {
+    return "<?php $foo = 'bar'; echo $foo; ?>";
+  });
+  $compiler->directive('meta', function($expression) {
+    return "<?php $meta = get_post_meta{$expression}; echo $meta; ?>";
+  });
+});
+```
+
+> You can now use these directives in your Blade template
+
+```php 
+# the foo directive
+@foo
+# the meta directive
+@meta(get_the_ID(), '_meta_key', true)
+```
