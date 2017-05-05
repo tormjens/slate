@@ -26,7 +26,7 @@ $blade = TorMorten\View\Blade::create();
 
 ```php
 <?php 
-add_action('after_theme_setup', function() {
+add_action('after_setup_theme', function() {
   add_theme_support('blade-templates');
 });
 ```
